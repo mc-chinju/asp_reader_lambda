@@ -1,7 +1,13 @@
+# coding: UTF-8
+
 import requests
 import yaml
 import mechanize
 from bs4 import BeautifulSoup
+
+# For debug
+from IPython import embed
+from IPython.terminal.embed import InteractiveShellEmbed
 
 # Scraping Settings
 agent = mechanize.Browser()
@@ -34,6 +40,8 @@ for asp_name in asp_names:
 
     agent.open(login_page)
 
+    print("%sのデータ検索を開始します。" % asp_name.capitalize())
+
     if asp_name == "a8":
         agent.select_form(name="asLogin")
         agent["login"] = login_id
@@ -57,19 +65,87 @@ for asp_name in asp_names:
                 count_line = 1
                 reward_line = 2
 
-            html = agent.open("%s?action=%s" % (data_page, action)).read()
+            html = agent.open("%s?action=%s" % (data_page, action))
             soup = BeautifulSoup(html, "html.parser")
             target = soup.select(search_target)[0]
             latest_data = target.find_all("tr")[latest_data_line]
             setattr(c, ("%s_count" % action), latest_data.find_all("td")[count_line].text.strip())
             setattr(c, ("%s_reward" % action), latest_data.find_all("td")[reward_line].text.strip())
 
-            c.line_notify_message += asp_name.capitalize() + ":" + c.ud_reward + "\n"
+    elif asp_name == "felmat":
+        agent.select_form(name="loginForm")
+        agent["p_username"] = login_id
+        agent["p_password"] = password
+        agent.submit()
 
-    # elif asp_name == "felmat":
-    # elif asp_name == "access_trade":
-    # elif asp_name == "mosimo":
-    # elif asp_name == "rentracks":
+        actions = ["daily", "monthly"]
+        for action in actions:
+            html = agent.open("%s/%s" % (data_page, action))
+            soup = BeautifulSoup(html, "html.parser")
+            target = soup.find_all("tbody")[0]
+            latest_data = target.find_all("tr")[0]
+            term = "d" if action == "daily" else "m"
+            setattr(c, "u%s_count" % term, latest_data.find_all("td")[4].text.strip())
+            setattr(c, "u%s_reward" % term, latest_data.find_all("td")[5].text.strip())
+            setattr(c, "d%s_count" % term, latest_data.find_all("td")[7].text.strip())
+            setattr(c, "d%s_reward" % term, latest_data.find_all("td")[8].text.strip())
+
+    elif asp_name == "access_trade":
+        form_action = "https://member.accesstrade.net/atv3/login.html"
+        agent.select_form(action=form_action)
+        agent["userId"] = login_id
+        agent["userPass"] = password
+        agent.submit()
+
+        html = agent.open(data_page)
+        soup = BeautifulSoup(html, "html.parser")
+        target = soup.select(".report tbody tr")
+        setattr(c, "ud_count", target[1].find_all("td")[0].text)
+        setattr(c, "um_count", target[1].find_all("td")[1].text)
+        setattr(c, "ud_reward", target[2].find_all("td")[0].text.strip())
+        setattr(c, "um_reward", target[2].find_all("td")[1].text.strip())
+        setattr(c, "dd_count", target[3].find_all("td")[0].text)
+        setattr(c, "dm_count", target[3].find_all("td")[1].text)
+        setattr(c, "dd_reward", target[4].find_all("td")[0].text.strip())
+        setattr(c, "dm_reward", target[4].find_all("td")[1].text.strip())
+
+    elif asp_name == "mosimo":
+        agent.select_form(id="login-form")
+        agent["account"] = login_id
+        agent["password"] = password
+        agent.submit()
+
+        actions = ["daily", "monthly"]
+        for action in actions:
+            html = agent.open("%s/%s" % (data_page, action))
+            soup = BeautifulSoup(html, "html.parser")
+            target = soup.select(".payment-table tbody")[0].find_all("tr")[-1]
+            term = "d" if action == "daily" else "m"
+            setattr(c, "u%s_count" % term, target.find_all("td")[3].find_all("p")[0].text.strip())
+            setattr(c, "u%s_reward" % term, target.find_all("td")[3].find_all("p")[1].text.strip())
+            setattr(c, "d%s_count" % term, target.find_all("td")[4].find_all("p")[0].text.strip())
+            setattr(c, "d%s_reward" % term, target.find_all("td")[4].find_all("p")[1].text.strip())
+
+    elif asp_name == "rentracks":
+        form_action = "https://manage.rentracks.jp/manage/login/login_manage_validation"
+        agent.select_form(action=form_action)
+        agent["idMailaddress"] = login_id
+        agent["idLoginPassword"] = password
+        agent.submit()
+
+        html = agent.open(data_page)
+        soup = BeautifulSoup(html, "html.parser")
+        target = soup.select(".datatable tr")
+
+        actions = ["daily", "monthly"]
+        for action in actions:
+            term = "d" if action == "daily" else "m"
+            setattr(c, "u%s_count" % term, target[4].find_all("td")[3].text.strip())
+            setattr(c, "u%s_reward" % term, target[4].find_all("td")[5].text.strip())
+            setattr(c, "d%s_count" % term, target[7].find_all("td")[3].text.strip())
+            setattr(c, "d%s_reward" % term, target[7].find_all("td")[5].text.strip())
+
+    c.line_notify_message += asp_name.capitalize() + ":" + c.ud_reward + "\n"
 
 # LINE Notify settings
 with open("line_notify.yml", "r") as file:
