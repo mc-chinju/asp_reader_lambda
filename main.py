@@ -1,6 +1,7 @@
 import requests
 import yaml
 import mechanize
+from bs4 import BeautifulSoup
 
 # Scraping Settings
 agent = mechanize.Browser()
@@ -19,6 +20,12 @@ with open("security.yml", "r") as file:
         if security_info[asp_name]["id"]:
             asp_names.append(asp_name)
 
+# For instance_variable_set
+class Container():
+    pass
+c = Container()
+c.line_notify_message = "Today\n"
+
 for asp_name in asp_names:
     login_page = asp_info[asp_name]["login"]
     data_page = asp_info[asp_name]["data"]
@@ -32,12 +39,37 @@ for asp_name in asp_names:
         agent["login"] = login_id
         agent["passwd"] = password
         agent.submit()
-        print(res.read())
 
-    elif asp_name == "felmat":
-    elif asp_name == "access_trade":
-    elif asp_name == "mosimo":
-    elif asp_name == "rentracks":
+        # unconfirmed => u, decided => d
+        # month => m, daily => d
+        actions = ["ud", "dd", "um", "dm"]
+        for action in actions:
+            latest_data_line = 1 if action in ["um", "dm"] else 2
+            search_target = "table" if (action == "dd") else ".reportTable1"
+
+            if action == "ud":
+                count_line = 5
+                reward_line = 6
+            elif action in ["dd", "um"]:
+                count_line = 3
+                reward_line = 4
+            elif action == "dm":
+                count_line = 1
+                reward_line = 2
+
+            html = agent.open("%s?action=%s" % (data_page, action)).read()
+            soup = BeautifulSoup(html, "html.parser")
+            target = soup.select(search_target)[0]
+            latest_data = target.find_all("tr")[latest_data_line]
+            setattr(c, ("%s_count" % action), latest_data.find_all("td")[count_line].text.strip())
+            setattr(c, ("%s_reward" % action), latest_data.find_all("td")[reward_line].text.strip())
+
+            c.line_notify_message += asp_name.capitalize() + ":" + c.ud_reward + "\n"
+
+    # elif asp_name == "felmat":
+    # elif asp_name == "access_trade":
+    # elif asp_name == "mosimo":
+    # elif asp_name == "rentracks":
 
 # LINE Notify settings
 with open("line_notify.yml", "r") as file:
@@ -47,8 +79,8 @@ LINE_NOTIFY_URL = "https://notify-api.line.me/api/notify"
 
 # LINe Notify logic
 if LINE_TOKEN is not None:
-    data = { "message": "test" }
-    headers = { "Authorization": f"Bearer {LINE_TOKEN}" }
+    data = { "message": c.line_notify_message }
+    headers = { "Authorization": "Bearer %s" % LINE_TOKEN }
 
     try:
         r = requests.post(LINE_NOTIFY_URL, data=data, headers=headers)
