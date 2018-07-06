@@ -1,5 +1,7 @@
 # coding: UTF-8
 
+import csv
+import re
 import requests
 import yaml
 import mechanize
@@ -26,11 +28,20 @@ with open("security.yml", "r") as file:
         if security_info[asp_name]["id"]:
             asp_names.append(asp_name)
 
+# Initialize csv
+with open("data.csv", "w") as f:
+    writer = csv.writer(f, lineterminator="\n")
+    header =["アフィリエイトサイト", "本日発生件数", "本日発生報酬", "本日承認件数", "本日承認報酬", "当月発生件数", "当月発生報酬", "当月承認件数", "当月承認報酬"]
+    writer.writerow(header)
+
 # For instance_variable_set
 class Container():
     pass
 c = Container()
-c.line_notify_message = "Today\n"
+c.line_notify_message = "本日の発生報酬\n"
+
+def to_num_s(str):
+    return re.sub(r"\D", "", str.strip().encode("utf-8"))
 
 for asp_name in asp_names:
     login_page = asp_info[asp_name]["login"]
@@ -69,8 +80,8 @@ for asp_name in asp_names:
             soup = BeautifulSoup(html, "html.parser")
             target = soup.select(search_target)[0]
             latest_data = target.find_all("tr")[latest_data_line]
-            setattr(c, ("%s_count" % action), latest_data.find_all("td")[count_line].text.strip())
-            setattr(c, ("%s_reward" % action), latest_data.find_all("td")[reward_line].text.strip())
+            setattr(c, ("%s_count" % action), to_num_s(latest_data.find_all("td")[count_line].text))
+            setattr(c, ("%s_reward" % action), to_num_s(latest_data.find_all("td")[reward_line].text))
 
     elif asp_name == "felmat":
         agent.select_form(name="loginForm")
@@ -85,10 +96,10 @@ for asp_name in asp_names:
             target = soup.find_all("tbody")[0]
             latest_data = target.find_all("tr")[0]
             term = "d" if action == "daily" else "m"
-            setattr(c, "u%s_count" % term, latest_data.find_all("td")[4].text.strip())
-            setattr(c, "u%s_reward" % term, latest_data.find_all("td")[5].text.strip())
-            setattr(c, "d%s_count" % term, latest_data.find_all("td")[7].text.strip())
-            setattr(c, "d%s_reward" % term, latest_data.find_all("td")[8].text.strip())
+            setattr(c, "u%s_count" % term, to_num_s(latest_data.find_all("td")[4].text))
+            setattr(c, "u%s_reward" % term, to_num_s(latest_data.find_all("td")[5].text))
+            setattr(c, "d%s_count" % term, to_num_s(latest_data.find_all("td")[7].text))
+            setattr(c, "d%s_reward" % term, to_num_s(latest_data.find_all("td")[8].text))
 
     elif asp_name == "access_trade":
         form_action = "https://member.accesstrade.net/atv3/login.html"
@@ -100,14 +111,14 @@ for asp_name in asp_names:
         html = agent.open(data_page)
         soup = BeautifulSoup(html, "html.parser")
         target = soup.select(".report tbody tr")
-        setattr(c, "ud_count", target[1].find_all("td")[0].text)
-        setattr(c, "um_count", target[1].find_all("td")[1].text)
-        setattr(c, "ud_reward", target[2].find_all("td")[0].text.strip())
-        setattr(c, "um_reward", target[2].find_all("td")[1].text.strip())
-        setattr(c, "dd_count", target[3].find_all("td")[0].text)
-        setattr(c, "dm_count", target[3].find_all("td")[1].text)
-        setattr(c, "dd_reward", target[4].find_all("td")[0].text.strip())
-        setattr(c, "dm_reward", target[4].find_all("td")[1].text.strip())
+        setattr(c, "ud_count", to_num_s(target[1].find_all("td")[0].text))
+        setattr(c, "um_count", to_num_s(target[1].find_all("td")[1].text))
+        setattr(c, "ud_reward", to_num_s(target[2].find_all("td")[0].text))
+        setattr(c, "um_reward", to_num_s(target[2].find_all("td")[1].text))
+        setattr(c, "dd_count", to_num_s(target[3].find_all("td")[0].text))
+        setattr(c, "dm_count", to_num_s(target[3].find_all("td")[1].text))
+        setattr(c, "dd_reward", to_num_s(target[4].find_all("td")[0].text))
+        setattr(c, "dm_reward", to_num_s(target[4].find_all("td")[1].text))
 
     elif asp_name == "mosimo":
         agent.select_form(id="login-form")
@@ -121,10 +132,10 @@ for asp_name in asp_names:
             soup = BeautifulSoup(html, "html.parser")
             target = soup.select(".payment-table tbody")[0].find_all("tr")[-1]
             term = "d" if action == "daily" else "m"
-            setattr(c, "u%s_count" % term, target.find_all("td")[3].find_all("p")[0].text.strip())
-            setattr(c, "u%s_reward" % term, target.find_all("td")[3].find_all("p")[1].text.strip())
-            setattr(c, "d%s_count" % term, target.find_all("td")[4].find_all("p")[0].text.strip())
-            setattr(c, "d%s_reward" % term, target.find_all("td")[4].find_all("p")[1].text.strip())
+            setattr(c, "u%s_count" % term, to_num_s(target.find_all("td")[3].find_all("p")[0].text))
+            setattr(c, "u%s_reward" % term, to_num_s(target.find_all("td")[3].find_all("p")[1].text))
+            setattr(c, "d%s_count" % term, to_num_s(target.find_all("td")[4].find_all("p")[0].text))
+            setattr(c, "d%s_reward" % term, to_num_s(target.find_all("td")[4].find_all("p")[1].text))
 
     elif asp_name == "rentracks":
         form_action = "https://manage.rentracks.jp/manage/login/login_manage_validation"
@@ -140,12 +151,28 @@ for asp_name in asp_names:
         actions = ["daily", "monthly"]
         for action in actions:
             term = "d" if action == "daily" else "m"
-            setattr(c, "u%s_count" % term, target[4].find_all("td")[3].text.strip())
-            setattr(c, "u%s_reward" % term, target[4].find_all("td")[5].text.strip())
-            setattr(c, "d%s_count" % term, target[7].find_all("td")[3].text.strip())
-            setattr(c, "d%s_reward" % term, target[7].find_all("td")[5].text.strip())
+            setattr(c, "u%s_count" % term, to_num_s(target[4].find_all("td")[3].text))
+            setattr(c, "u%s_reward" % term, to_num_s(target[4].find_all("td")[5].text))
+            setattr(c, "d%s_count" % term, to_num_s(target[7].find_all("td")[3].text))
+            setattr(c, "d%s_reward" % term, to_num_s(target[7].find_all("td")[5].text))
 
-    c.line_notify_message += asp_name.capitalize() + ":" + c.ud_reward + "\n"
+    c.line_notify_message += asp_name.capitalize() + ": ¥{:,d}".format(int(c.ud_reward)) + "\n"
+
+    # Output data to csv
+    with open("data.csv", "a") as f:
+        writer = csv.writer(f)
+        row_data = [
+            asp_name,
+            c.ud_count,
+            c.ud_reward,
+            c.dd_count,
+            c.dd_reward,
+            c.um_count,
+            c.um_reward,
+            c.dm_count,
+            c.dm_reward,
+        ]
+        writer.writerow(row_data)
 
 # LINE Notify settings
 with open("line_notify.yml", "r") as file:
@@ -160,6 +187,6 @@ if LINE_TOKEN is not None:
 
     try:
         r = requests.post(LINE_NOTIFY_URL, data=data, headers=headers)
-        print(r)
+        print("%s LINE通知を送信しました" % r)
     except:
         print(sys.exc_info())
