@@ -43,6 +43,10 @@ c.line_notify_message = "本日の発生報酬\n"
 def to_num_s(str):
     return re.sub(r"\D", "", str.strip().encode("utf-8"))
 
+def camelize(str):
+    words = str.split("_")
+    return words[0].capitalize() + "".join(x.title() for x in words[1:])
+
 for asp_name in asp_names:
     login_page = asp_info[asp_name]["login"]
     data_page = asp_info[asp_name]["data"]
@@ -51,7 +55,7 @@ for asp_name in asp_names:
 
     agent.open(login_page)
 
-    print("%sのデータ検索を開始します。" % asp_name.capitalize())
+    print("%sのデータ検索を開始します。" % camelize(asp_name))
 
     if asp_name == "a8":
         agent.select_form(name="asLogin")
@@ -156,13 +160,13 @@ for asp_name in asp_names:
             setattr(c, "d%s_count" % term, to_num_s(target[7].find_all("td")[3].text))
             setattr(c, "d%s_reward" % term, to_num_s(target[7].find_all("td")[5].text))
 
-    c.line_notify_message += asp_name.capitalize() + ": ¥{:,d}".format(int(c.ud_reward)) + "\n"
+    c.line_notify_message += camelize(asp_name) + ": ¥{:,d}".format(int(c.ud_reward)) + "\n"
 
     # Output data to csv
     with open("data.csv", "a") as f:
         writer = csv.writer(f)
         row_data = [
-            asp_name,
+            camelize(asp_name),
             c.ud_count,
             c.ud_reward,
             c.dd_count,
