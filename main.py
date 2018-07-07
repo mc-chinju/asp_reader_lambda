@@ -38,7 +38,7 @@ with open("data.csv", "w") as f:
 class Container():
     pass
 c = Container()
-c.line_notify_message = "本日の発生報酬\n"
+c.line_notify_message = "本日の発生報酬"
 
 def to_num_s(str):
     return re.sub(r"\D", "", str.strip().encode("utf-8"))
@@ -160,7 +160,7 @@ for asp_name in asp_names:
             setattr(c, "d%s_count" % term, to_num_s(target[7].find_all("td")[3].text))
             setattr(c, "d%s_reward" % term, to_num_s(target[7].find_all("td")[5].text))
 
-    c.line_notify_message += camelize(asp_name) + ": ¥{:,d}".format(int(c.ud_reward)) + "\n"
+    c.line_notify_message += "\n" + camelize(asp_name) + ": ¥{:,d}".format(int(c.ud_reward))
 
     # Output data to csv
     with open("data.csv", "a") as f:
