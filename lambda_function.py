@@ -99,7 +99,8 @@ def search_asps():
             setattr(c, "ud_reward", to_num_s(target[2].find_all("td")[0].text))
 
         elif asp_name == "mosimo":
-            agent.select_form(id="login-form")
+            form_action = "https://af.moshimo.com/af/shop/login/execute"
+            agent.select_form(action=form_action)
             agent["account"] = login_id
             agent["password"] = password
             agent.submit()
