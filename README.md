@@ -10,12 +10,12 @@ This service searches ASP data.
 
 ## How to use?
 ### 1. Write your personal data on `line_notify.yml` and `security.yml`
-**line_notify.yml**
+#### line_notify.yml
 Duplicate this file from `line_notify.yml.sample`.
 If you write your LINE token, it's enbale to send data to LINE.
 [LINE Notify](https://notify-bot.line.me/) provides LINE token.
 
-**security.yml**
+#### security.yml
 Duplicate this file from `line_notify.yml.sample`.
 If you write your personal ASP data, it's enbale to search data.
 
