@@ -4,6 +4,7 @@ import re
 import requests
 import yaml
 import mechanize
+import datetime
 from bs4 import BeautifulSoup
 
 # For debug
@@ -61,46 +62,43 @@ def search_asps():
 
         print("%sのデータ検索を開始します。" % camelize(asp_name))
 
-        if asp_name == "a8":
-            try:
-                agent.select_form(name="asLogin")
-                agent["login"] = login_id
-                agent["passwd"] = password
-                agent.submit()
+        # A8 は当日のデータをjsで描画しているため、現状の仕組みでは取得できず。
+        # if asp_name == "a8":
+        #     try:
+        #         agent.select_form(name="asLogin")
+        #         agent["login"] = login_id
+        #         agent["passwd"] = password
+        #         agent.submit()
+        #
+        #         action = "ud"
+        #         latest_data_line = 2
+        #         search_target = ".reportTable1"
+        #
+        #         reward_line = 6
+        #
+        #         html = agent.open("%s?action=%s" % (data_page, action))
+        #         soup = BeautifulSoup(html, "html.parser")
+        #         target = soup.select(search_target)[0]
+        #         latest_data = target.find_all("tr")[latest_data_line]
+        #         price = to_num_s(latest_data.find_all("td")[reward_line].text)
+        #         add_line_message(asp_name, delimited(price))
+        #     except:
+        #         add_line_message(asp_name, "取得失敗")
 
-                action = "ud"
-                latest_data_line = 2
-                search_target = ".reportTable1"
-
-                count_line = 5
-                reward_line = 6
-
-                html = agent.open("%s?action=%s" % (data_page, action))
-                soup = BeautifulSoup(html, "html.parser")
-                target = soup.select(search_target)[0]
-                latest_data = target.find_all("tr")[latest_data_line]
-                price = to_num_s(latest_data.find_all("td")[reward_line].text)
-                add_line_message(asp_name, delimited(price))
-            except:
-                add_line_message(asp_name, "取得失敗")
-
-        elif asp_name == "felmat":
+        if asp_name == "felmat":
             try:
                 agent.select_form(name="loginForm")
                 agent["p_username"] = login_id
                 agent["p_password"] = password
                 agent.submit()
 
-                actions = ["daily", "monthly"]
-                for action in actions:
-                    html = agent.open("%s/%s" % (data_page, action))
-                    soup = BeautifulSoup(html, "html.parser")
-                    target = soup.find_all("tbody")[0]
-                    latest_data = target.find_all("tr")[0]
-                    term = "d" if action == "daily" else "m"
-                    if (term == "d"):
-                        price = to_num_s(latest_data.find_all("td")[5].text)
-                        add_line_message(asp_name, delimited(price))
+                html = agent.open("%s/%s" % (data_page, "daily"))
+                soup = BeautifulSoup(html, "html.parser")
+
+                today_number = datetime.date.today().day
+                target_line = soup.find_all("tbody")[0].find_all("tr")[-today_number]
+                price = to_num_s(target_line.find_all("td")[5].text)
+                add_line_message(asp_name, delimited(price))
             except:
                 add_line_message(asp_name, "取得失敗")
 
