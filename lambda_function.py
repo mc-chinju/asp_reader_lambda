@@ -7,8 +7,8 @@ import mechanize
 from bs4 import BeautifulSoup
 
 # For debug
-from IPython import embed
-from IPython.terminal.embed import InteractiveShellEmbed
+# from IPython import embed
+# from IPython.terminal.embed import InteractiveShellEmbed
 
 # Scraping Settings
 agent = mechanize.Browser()
