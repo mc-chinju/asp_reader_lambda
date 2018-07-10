@@ -150,12 +150,8 @@ def search_asps():
                 soup = BeautifulSoup(html, "html.parser")
                 target = soup.select(".datatable tr")
 
-                actions = ["daily", "monthly"]
-                for action in actions:
-                    term = "d" if action == "daily" else "m"
-                    if (term == "d"):
-                        price = to_num_s(target[4].find_all("td")[5].text)
-                        add_line_message(asp_name, delimited(price))
+                price = to_num_s(target[9].find_all("td")[5].text)
+                add_line_message(asp_name, delimited(price))
             except:
                 add_line_message(asp_name, "取得失敗")
 
