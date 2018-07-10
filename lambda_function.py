@@ -126,15 +126,11 @@ def search_asps():
                 agent["password"] = password
                 agent.submit()
 
-                actions = ["daily", "monthly"]
-                for action in actions:
-                    html = agent.open("%s/%s" % (data_page, action))
-                    soup = BeautifulSoup(html, "html.parser")
-                    target = soup.select(".payment-table tbody")[0].find_all("tr")[-1]
-                    term = "d" if action == "daily" else "m"
-                    if (term == "d"):
-                        price = to_num_s(target.find_all("td")[3].find_all("p")[1].text)
-                        add_line_message(asp_name, delimited(price))
+                html = agent.open("%s/%s" % (data_page, "daily"))
+                soup = BeautifulSoup(html, "html.parser")
+                target = soup.select(".payment-table tbody")[0].find_all("tr")[-1]
+                price = to_num_s(target.find_all("td")[3].find_all("p")[1].text)
+                add_line_message(asp_name, delimited(price))
             except:
                 add_line_message(asp_name, "取得失敗")
 
