@@ -16,3 +16,6 @@ mosimo:
 value_commerce:
   login: https://aff.valuecommerce.ne.jp/?type=4
   data: https://aff.valuecommerce.ne.jp/report/stats
+amazon_associate:
+  login: https://amzn.to/2MeHZii
+  data: https://affiliate.amazon.co.jp/home/reports
