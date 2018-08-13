@@ -181,35 +181,36 @@ def search_asps():
             except:
                 add_line_message(asp_name, "取得失敗")
 
-        elif asp_name == "amazon_associate":
-            try:
-                # Login
-                driver.get(login_page)
-                driver.find_element_by_name("email").send_keys(login_id)
-                driver.find_element_by_name("password").send_keys(password)
-                driver.find_element_by_id("signInSubmit").click()
-
-                # 当日のデータがリアルタイムで出ないので、昨日のデータを取得
-                driver.get(data_page)
-                element = driver.find_element_by_id("ac-daterange-label-report-timeInterval")
-                hov = ActionChains(driver).move_to_element(element)
-                hov.perform()
-
-                time.sleep(3) # 読み込みが終わるまでのバッファ
-
-                driver.find_element_by_id("ac-daterange-radio-report-timeInterval-yesterday").click()
-                driver.find_element_by_id("ac-daterange-ok-button-report-timeInterval-announce").click()
-
-                time.sleep(3) # 読み込みが終わるまでのバッファ
-
-                html = driver.page_source.encode("utf-8")
-                soup = BeautifulSoup(html, "html.parser")
-
-                target = soup.select("#ac-report-earning-amount")
-                price = to_num_s(target[0].text)
-                add_line_message(asp_name, delimited(price))
-            except:
-                add_line_message(asp_name, "取得失敗")
+        # TODO: headless mode で動かしたときに、ログイン時にランダム文字列入力を求められるため断念
+        # elif asp_name == "amazon_associate":
+        #     try:
+        #         # Login
+        #         driver.get(login_page)
+        #         driver.find_element_by_name("email").send_keys(login_id)
+        #         driver.find_element_by_name("password").send_keys(password)
+        #         driver.find_element_by_id("signInSubmit").click()
+        #
+        #         # 当日のデータがリアルタイムで出ないので、昨日のデータを取得
+        #         driver.get(data_page)
+        #         element = driver.find_element_by_id("ac-daterange-label-report-timeInterval")
+        #         hov = ActionChains(driver).move_to_element(element)
+        #         hov.perform()
+        #
+        #         time.sleep(3) # 読み込みが終わるまでのバッファ
+        #
+        #         driver.find_element_by_id("ac-daterange-radio-report-timeInterval-yesterday").click()
+        #         driver.find_element_by_id("ac-daterange-ok-button-report-timeInterval-announce").click()
+        #
+        #         time.sleep(3) # 読み込みが終わるまでのバッファ
+        #
+        #         html = driver.page_source.encode("utf-8")
+        #         soup = BeautifulSoup(html, "html.parser")
+        #
+        #         target = soup.select("#ac-report-earning-amount")
+        #         price = to_num_s(target[0].text)
+        #         add_line_message(asp_name, delimited(price))
+        #     except:
+        #         add_line_message(asp_name, "取得失敗")
 
         elif asp_name == "presco":
             try:
