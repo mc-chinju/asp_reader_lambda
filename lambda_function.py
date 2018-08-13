@@ -1,6 +1,7 @@
 # coding: UTF-8
 
 import re
+import time
 import requests
 import yaml
 import mechanize
@@ -69,31 +70,23 @@ def search_asps():
         password = security_info[asp_name]["password"]
 
         print("%sのデータ検索を開始します。" % camelize(asp_name))
-        # A8 は当日のデータをjsで描画しているため、現状の仕組みでは取得できず。
-        # if asp_name == "a8":
-        #     try:
-        #         agent.open(login_page)
-        #         agent.select_form(name="asLogin")
-        #         agent["login"] = login_id
-        #         agent["passwd"] = password
-        #         agent.submit()
-        #
-        #         action = "ud"
-        #         latest_data_line = 2
-        #         search_target = ".reportTable1"
-        #
-        #         reward_line = 6
-        #
-        #         html = agent.open("%s?action=%s" % (data_page, action))
-        #         soup = BeautifulSoup(html, "html.parser")
-        #         target = soup.select(search_target)[0]
-        #         latest_data = target.find_all("tr")[latest_data_line]
-        #         price = to_num_s(latest_data.find_all("td")[reward_line].text)
-        #         add_line_message(asp_name, delimited(price))
-        #     except:
-        #         add_line_message(asp_name, "取得失敗")
+        if asp_name == "a8":
+            try:
+                driver.get(login_page)
+                driver.find_element_by_name("login").send_keys(login_id)
+                driver.find_element_by_name("passwd").send_keys(password)
+                driver.find_element_by_name("lgin_as_btn").click()
 
-        if asp_name == "felmat":
+                time.sleep(3) # js読み込みが終わるまでのバッファ
+                html = driver.page_source.encode("utf-8")
+                soup = BeautifulSoup(html, "html.parser")
+                target = soup.select("#reportBox01 .repo03 td")
+                price = to_num_s(target[0].text)
+                add_line_message(asp_name, delimited(price))
+            except:
+                add_line_message(asp_name, "取得失敗")
+
+        elif asp_name == "felmat":
             try:
                 agent.open(login_page)
                 agent.select_form(name="loginForm")
