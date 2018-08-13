@@ -9,6 +9,7 @@ import datetime
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
 
 # For debug
 # from IPython import embed
@@ -155,6 +156,7 @@ def search_asps():
                 add_line_message(asp_name, delimited(price))
             except:
                 add_line_message(asp_name, "取得失敗")
+
         elif asp_name == "value_commerce":
             try:
                 # Login
@@ -169,6 +171,32 @@ def search_asps():
                 soup = BeautifulSoup(html, "html.parser")
                 target = soup.select("#report tbody tr")[1]
                 price = to_num_s(target.find_all("td")[8].text)
+                add_line_message(asp_name, delimited(price))
+            except:
+                add_line_message(asp_name, "取得失敗")
+
+        elif asp_name == "amazon_associate":
+            try:
+                # Login
+                driver.get(login_page)
+                driver.find_element_by_name("email").send_keys(login_id)
+                driver.find_element_by_name("password").send_keys(password)
+                driver.find_element_by_id("signInSubmit").click()
+
+                # 当日のデータがリアルタイムで出ないので、昨日のデータを取得
+                driver.get(data_page)
+                element = driver.find_element_by_id("ac-daterange-label-report-timeInterval")
+                hov = ActionChains(driver).move_to_element(element)
+                hov.perform()
+                driver.find_element_by_id("ac-daterange-radio-report-timeInterval-yesterday").click()
+                driver.find_element_by_id("ac-daterange-ok-button-report-timeInterval-announce").click()
+
+                time.sleep(3) # js読み込みが終わるまでのバッファ
+                html = driver.page_source.encode("utf-8")
+                soup = BeautifulSoup(html, "html.parser")
+
+                target = soup.select("#ac-report-earning-amount")
+                price = to_num_s(target[0].text)
                 add_line_message(asp_name, delimited(price))
             except:
                 add_line_message(asp_name, "取得失敗")

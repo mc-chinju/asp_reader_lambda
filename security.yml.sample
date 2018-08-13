@@ -16,3 +16,6 @@ rentracks:
 value_commerce:
   id:
   password:
+amazon_associate:
+  id:
+  password:
