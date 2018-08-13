@@ -24,7 +24,11 @@ agent.set_handle_robots(False)
 ## Chrome Headless Browser
 chrome_options = Options()
 chrome_options.set_headless(True) # If you comment out this line, Browser stands up!
-driver_path = "./chromedriver"
+# Comment out following, if you use local machine!
+chrome_options.binary_location = "./bin/headless-chromium"
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--single-process")
+driver_path = "./bin/chromedriver"
 driver = webdriver.Chrome(driver_path, chrome_options=chrome_options)
 
 with open("asp.yml", "r") as file:
