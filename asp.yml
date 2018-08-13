@@ -13,3 +13,6 @@ rentracks:
 mosimo:
   login: https://af.moshimo.com/af/shop/login
   data: https://af.moshimo.com/af/shop/report/payment
+value_commerce:
+  login: https://aff.valuecommerce.ne.jp/?type=4
+  data: https://aff.valuecommerce.ne.jp/report/stats
