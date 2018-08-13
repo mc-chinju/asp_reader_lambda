@@ -6,15 +6,25 @@ import yaml
 import mechanize
 import datetime
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 # For debug
 # from IPython import embed
 # from IPython.terminal.embed import InteractiveShellEmbed
 
 # Scraping Settings
+## Mechanize
 agent = mechanize.Browser()
 agent.addheaders = [("User-agent", "Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.4b) Gecko/20030516 Mozilla Firebird/0.6")]
 agent.set_handle_robots(False)
+
+## Chrome Headless Browser
+chrome_options = Options()
+chrome_options.set_headless(True) # If you comment out this line, Browser stands up!
+driver_path = "./chromedriver"
+driver = webdriver.Chrome(driver_path, chrome_options=chrome_options)
+
 with open("asp.yml", "r") as file:
     asp_info = yaml.safe_load(file.read())
 
@@ -58,13 +68,11 @@ def search_asps():
         login_id = security_info[asp_name]["id"]
         password = security_info[asp_name]["password"]
 
-        agent.open(login_page)
-
         print("%sのデータ検索を開始します。" % camelize(asp_name))
-
         # A8 は当日のデータをjsで描画しているため、現状の仕組みでは取得できず。
         # if asp_name == "a8":
         #     try:
+        #         agent.open(login_page)
         #         agent.select_form(name="asLogin")
         #         agent["login"] = login_id
         #         agent["passwd"] = password
@@ -87,6 +95,7 @@ def search_asps():
 
         if asp_name == "felmat":
             try:
+                agent.open(login_page)
                 agent.select_form(name="loginForm")
                 agent["p_username"] = login_id
                 agent["p_password"] = password
@@ -104,6 +113,7 @@ def search_asps():
 
         elif asp_name == "access_trade":
             try:
+                agent.open(login_page)
                 form_action = "https://member.accesstrade.net/atv3/login.html"
                 agent.select_form(action=form_action)
                 agent["userId"] = login_id
@@ -120,6 +130,7 @@ def search_asps():
 
         elif asp_name == "mosimo":
             try:
+                agent.open(login_page)
                 form_action = "https://af.moshimo.com/af/shop/login/execute"
                 agent.select_form(action=form_action)
                 agent["account"] = login_id
@@ -136,6 +147,7 @@ def search_asps():
 
         elif asp_name == "rentracks":
             try:
+                agent.open(login_page)
                 form_action = "https://manage.rentracks.jp/manage/login/login_manage_validation"
                 agent.select_form(action=form_action)
                 agent["idMailaddress"] = login_id
@@ -147,6 +159,23 @@ def search_asps():
                 target = soup.select(".datatable tr")
 
                 price = to_num_s(target[9].find_all("td")[5].text)
+                add_line_message(asp_name, delimited(price))
+            except:
+                add_line_message(asp_name, "取得失敗")
+        elif asp_name == "value_commerce":
+            try:
+                # Login
+                driver.get(login_page)
+                driver.find_element_by_id("login_form_emailAddress").send_keys(login_id)
+                driver.find_element_by_id("login_form_encryptedPasswd").send_keys(password)
+                driver.find_element_by_class_name("btn_green").click()
+
+                # Get data
+                driver.get(data_page)
+                html = driver.page_source.encode("utf-8")
+                soup = BeautifulSoup(html, "html.parser")
+                target = soup.select("#report tbody tr")[1]
+                price = to_num_s(target.find_all("td")[8].text)
                 add_line_message(asp_name, delimited(price))
             except:
                 add_line_message(asp_name, "取得失敗")
