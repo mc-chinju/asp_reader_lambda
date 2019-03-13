@@ -1,5 +1,5 @@
 beautifulsoup4==4.6.0
 mechanize==0.3.6
-requests==2.18.4
-PyYAML==3.12
+requests==2.21.0
+PyYAML==3.13
 selenium==3.13.0
