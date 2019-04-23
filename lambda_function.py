@@ -4,22 +4,14 @@ import re
 import time
 import requests
 import yaml
-import mechanize
 import datetime
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 
-# For debug
-# from IPython import embed
-# from IPython.terminal.embed import InteractiveShellEmbed
-
-# Scraping Settings
-## Mechanize
-agent = mechanize.Browser()
-agent.addheaders = [("User-agent", "Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.4b) Gecko/20030516 Mozilla Firebird/0.6")]
-agent.set_handle_robots(False)
+from IPython import embed
+from IPython.terminal.embed import InteractiveShellEmbed
 
 ## Chrome Headless Browser
 chrome_options = Options()
@@ -30,6 +22,7 @@ chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--single-process")
 driver_path = "./bin/chromedriver"
 driver = webdriver.Chrome(driver_path, chrome_options=chrome_options)
+driver = webdriver.Chrome()
 
 with open("asp.yml", "r") as file:
     asp_info = yaml.safe_load(file.read())
@@ -69,6 +62,7 @@ def add_line_message(asp_name, message):
     c.line_notify_message += "\n" + camelize(asp_name) + ": " + message
 
 def search_asps():
+    asp_names = ["mosimo"]
     for asp_name in asp_names:
         login_page = asp_info[asp_name]["login"]
         data_page = asp_info[asp_name]["data"]
@@ -87,6 +81,7 @@ def search_asps():
                 html = driver.page_source.encode("utf-8")
                 soup = BeautifulSoup(html, "html.parser")
                 target = soup.select("#reportBox01 .repo03 td")
+                embed()
                 price = to_num_s(target[0].text)
                 add_line_message(asp_name, delimited(price))
             except:
@@ -129,14 +124,15 @@ def search_asps():
 
         elif asp_name == "mosimo":
             try:
-                agent.open(login_page)
-                form_action = "https://af.moshimo.com/af/shop/login/execute"
-                agent.select_form(action=form_action)
-                agent["account"] = login_id
-                agent["password"] = password
-                agent.submit()
+                driver.get(login_page)
+                driver.find_element_by_name("account").send_keys(login_id)
+                driver.find_element_by_name("password").send_keys(password)
+                driver.find_element_by_name("login").click()
 
-                html = agent.open("%s/%s" % (data_page, "daily"))
+                driver.get(f"{data_page}/daily")
+                time.sleep(3) # js読み込みが終わるまでのバッファ
+
+                html = driver.page_source.encode("utf-8")
                 soup = BeautifulSoup(html, "html.parser")
                 target = soup.select(".payment-table tbody")[0].find_all("tr")[-1]
                 price = to_num_s(target.find_all("td")[3].find_all("p")[1].text)
@@ -255,6 +251,12 @@ def line_notify():
             print(sys.exc_info())
 
 def lambda_handler(event, context):
+    initialize()
+    search_asps()
+    line_notify()
+
+
+if __name__ == '__main__':
     initialize()
     search_asps()
     line_notify()
