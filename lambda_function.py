@@ -11,8 +11,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 
-from IPython import embed
-from IPython.terminal.embed import InteractiveShellEmbed
+# from IPython import embed
+# from IPython.terminal.embed import InteractiveShellEmbed
 
 ## Chrome Headless Browser
 chrome_options = Options()
