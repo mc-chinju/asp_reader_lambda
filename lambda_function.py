@@ -62,7 +62,6 @@ def add_line_message(asp_name, message):
     c.line_notify_message += "\n" + camelize(asp_name) + ": " + message
 
 def search_asps():
-    asp_names = ["mosimo"]
     for asp_name in asp_names:
         login_page = asp_info[asp_name]["login"]
         data_page = asp_info[asp_name]["data"]
@@ -81,7 +80,6 @@ def search_asps():
                 html = driver.page_source.encode("utf-8")
                 soup = BeautifulSoup(html, "html.parser")
                 target = soup.select("#reportBox01 .repo03 td")
-                embed()
                 price = to_num_s(target[0].text)
                 add_line_message(asp_name, delimited(price))
             except:
@@ -142,14 +140,15 @@ def search_asps():
 
         elif asp_name == "rentracks":
             try:
-                agent.open(login_page)
-                form_action = "https://manage.rentracks.jp/manage/login/login_manage_validation"
-                agent.select_form(action=form_action)
-                agent["idMailaddress"] = login_id
-                agent["idLoginPassword"] = password
-                agent.submit()
+                driver.get(login_page)
+                driver.find_element_by_name("idMailaddress").send_keys(login_id)
+                driver.find_element_by_name("idLoginPassword").send_keys(password)
+                driver.find_element_by_name("idButton").click()
 
-                html = agent.open(data_page)
+                driver.get(data_page)
+                time.sleep(3) # js読み込みが終わるまでのバッファ
+
+                html = driver.page_source.encode("utf-8")
                 soup = BeautifulSoup(html, "html.parser")
                 target = soup.select(".datatable tr")
 
