@@ -213,30 +213,24 @@ def search_asps():
         #     except:
         #         add_line_message(asp_name, "取得失敗")
 
-        elif asp_name == "presco":
-            try:
-                # Login
-                driver.get(login_page)
-                driver.find_element_by_name("loginId").send_keys(login_id)
-                driver.find_element_by_name("password").send_keys(password)
-                driver.find_element_by_id("button1").click()
-
-                now = datetime.datetime.now()
-                year = str(now.year)
-                month = str(now.month)
-                if (len(month) == 1):
-                    month = "0" + month
-                latest_data_page = ("%s/daily/yyyymm/%s-%s/" % (data_page, year, month))
-                driver.get(latest_data_page)
-
-                html = driver.page_source.encode("utf-8")
-                soup = BeautifulSoup(html, "html.parser")
-
-                target = soup.select("#mainContents tbody tr")[now.day + 1]
-                price = to_num_s(target.find_all("td")[-1].text)
-                add_line_message(asp_name, delimited(price))
-            except:
-                add_line_message(asp_name, "取得失敗")
+        # TODO: 売上がゼロのためhtml構造がわからず結果の出力ができない
+        # elif asp_name == "presco":
+        #     try:
+        #         # Login
+        #         driver.get(login_page)
+        #         driver.find_elements_by_xpath("//input[@name='username']")[1].send_keys(login_id)
+        #         driver.find_elements_by_xpath("//input[@name='password']")[1].send_keys(password)
+        #         driver.find_elements_by_xpath("//input[@type='submit']")[1].click()
+        #
+        #         driver.get(data_page)
+        #         html = driver.page_source.encode("utf-8")
+        #         soup = BeautifulSoup(html, "html.parser")
+        #
+        #         # target = soup.select("#mainContents tbody tr")[now.day + 1]
+        #         # price = to_num_s(target.find_all("td")[-1].text)
+        #         add_line_message(asp_name, delimited(price))
+        #     except:
+        #         add_line_message(asp_name, "取得失敗")
 
 def line_notify():
     # LINE Notify settings

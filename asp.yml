@@ -14,8 +14,8 @@ mosimo:
   login: https://af.moshimo.com/af/shop/login
   data: https://af.moshimo.com/af/shop/report/payment
 presco:
-  login: https://presco.asia/index/login
-  data: https://presco.asia/partneradmin/report
+  login: https://presco.ai
+  data: https://presco.ai/partner/actionLog/list
 rentracks:
   login: https://manage.rentracks.jp/manage/login
   data: https://manage.rentracks.jp/manage/top
