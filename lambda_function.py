@@ -1,5 +1,6 @@
 # coding: UTF-8
 
+import os
 import re
 import time
 import requests
@@ -22,21 +23,24 @@ chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--single-process")
 driver_path = "./bin/chromedriver"
 driver = webdriver.Chrome(driver_path, chrome_options=chrome_options)
-driver = webdriver.Chrome()
 
 with open("asp.yml", "r") as file:
     asp_info = yaml.safe_load(file.read())
 
 # Securities settings
 asp_names = list()
-with open("security.yml", "r") as file:
-    security_info = yaml.safe_load(file.read())
-    # TODO: refactoring code!
-    # Select target asps
-    _asp_names = security_info.keys()
-    for asp_name in _asp_names:
-        if security_info[asp_name]["id"]:
-            asp_names.append(asp_name)
+for k, v, in os.environ.items():
+    if (("ASP_ID" in k) and (len(v) != 0)):
+        asp_name = k.split("ASP_ID_")[1].lower()
+        asp_names.append(asp_name)
+
+# for development
+# asp_names = list()
+# with open("security.yml", "r") as file:
+#     security_info = yaml.safe_load(file.read())
+#     for asp_name in security_info.keys():
+#         if security_info[asp_name]["id"]:
+#             asp_names.append(asp_name)
 
 # For instance_variable_set
 class Container():
@@ -65,8 +69,11 @@ def search_asps():
     for asp_name in asp_names:
         login_page = asp_info[asp_name]["login"]
         data_page = asp_info[asp_name]["data"]
-        login_id = security_info[asp_name]["id"]
-        password = security_info[asp_name]["password"]
+        # for development
+        # login_id = security_info[asp_name]["id"]
+        # password = security_info[asp_name]["password"]
+        login_id = os.environ[f"ASP_ID_{asp_name.upper()}"]
+        password = os.environ[f"ASP_PW_{asp_name.upper()}"]
 
         print("%sのデータ検索を開始します。" % camelize(asp_name))
         if asp_name == "a8":
@@ -233,9 +240,13 @@ def search_asps():
 
 def line_notify():
     # LINE Notify settings
-    with open("line_notify.yml", "r") as file:
-        line_pay = file.read()
-    LINE_TOKEN = yaml.safe_load(line_pay)["token"]
+
+    # for development
+    # with open("line_notify.yml", "r") as file:
+    #     line_notify = file.read()
+    # LINE_TOKEN = yaml.safe_load(line_notify)["token"]
+
+    LINE_TOKEN = os.environ["LINE_NOTIFY_TOKEN"]
     LINE_NOTIFY_URL = "https://notify-api.line.me/api/notify"
 
     # LINe Notify logic
@@ -250,12 +261,6 @@ def line_notify():
             print(sys.exc_info())
 
 def lambda_handler(event, context):
-    initialize()
-    search_asps()
-    line_notify()
-
-
-if __name__ == '__main__':
     initialize()
     search_asps()
     line_notify()
