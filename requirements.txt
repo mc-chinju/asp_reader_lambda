@@ -1,5 +1,4 @@
 beautifulsoup4==4.6.0
-mechanize==0.3.6
 requests==2.21.0
 pyyaml>=4.2b1
 selenium==3.13.0

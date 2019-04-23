@@ -1,25 +1,18 @@
 # coding: UTF-8
 
+import os
 import re
 import time
 import requests
 import yaml
-import mechanize
 import datetime
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 
-# For debug
 # from IPython import embed
 # from IPython.terminal.embed import InteractiveShellEmbed
-
-# Scraping Settings
-## Mechanize
-agent = mechanize.Browser()
-agent.addheaders = [("User-agent", "Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.4b) Gecko/20030516 Mozilla Firebird/0.6")]
-agent.set_handle_robots(False)
 
 ## Chrome Headless Browser
 chrome_options = Options()
@@ -36,15 +29,18 @@ with open("asp.yml", "r") as file:
 
 # Securities settings
 asp_names = list()
-with open("security.yml", "r") as file:
-    security_info = yaml.safe_load(file.read())
-    # TODO: refactoring code!
-    # Select target asps
-    _asp_names = security_info.keys()
-    _asp_names.sort()
-    for asp_name in _asp_names:
-        if security_info[asp_name]["id"]:
-            asp_names.append(asp_name)
+for k, v, in os.environ.items():
+    if (("ASP_ID" in k) and (len(v) != 0)):
+        asp_name = k.split("ASP_ID_")[1].lower()
+        asp_names.append(asp_name)
+
+# for development
+# asp_names = list()
+# with open("security.yml", "r") as file:
+#     security_info = yaml.safe_load(file.read())
+#     for asp_name in security_info.keys():
+#         if security_info[asp_name]["id"]:
+#             asp_names.append(asp_name)
 
 # For instance_variable_set
 class Container():
@@ -57,7 +53,7 @@ def initialize():
     c.line_notify_message = "本日の発生報酬"
 
 def to_num_s(str):
-    return re.sub(r"\D", "", str.strip().encode("utf-8"))
+    return re.sub(r"\D", "", str.strip())
 
 def delimited(str):
     return "¥{:,d}".format(int(str))
@@ -73,8 +69,11 @@ def search_asps():
     for asp_name in asp_names:
         login_page = asp_info[asp_name]["login"]
         data_page = asp_info[asp_name]["data"]
-        login_id = security_info[asp_name]["id"]
-        password = security_info[asp_name]["password"]
+        # for development
+        # login_id = security_info[asp_name]["id"]
+        # password = security_info[asp_name]["password"]
+        login_id = os.environ[f"ASP_ID_{asp_name.upper()}"]
+        password = os.environ[f"ASP_PW_{asp_name.upper()}"]
 
         print("%sのデータ検索を開始します。" % camelize(asp_name))
         if asp_name == "a8":
@@ -95,13 +94,14 @@ def search_asps():
 
         elif asp_name == "felmat":
             try:
-                agent.open(login_page)
-                agent.select_form(name="loginForm")
-                agent["p_username"] = login_id
-                agent["p_password"] = password
-                agent.submit()
+                driver.get(login_page)
+                driver.find_element_by_name("p_username").send_keys(login_id)
+                driver.find_element_by_name("p_password").send_keys(password)
+                driver.find_element_by_name("partnerlogin").click()
 
-                html = agent.open("%s/%s" % (data_page, "daily"))
+                driver.get(f"{data_page}/daily")
+                time.sleep(3) # js読み込みが終わるまでのバッファ
+                html = driver.page_source.encode("utf-8")
                 soup = BeautifulSoup(html, "html.parser")
 
                 today_number = datetime.date.today().day
@@ -113,14 +113,13 @@ def search_asps():
 
         elif asp_name == "access_trade":
             try:
-                agent.open(login_page)
-                form_action = "https://member.accesstrade.net/atv3/login.html"
-                agent.select_form(action=form_action)
-                agent["userId"] = login_id
-                agent["userPass"] = password
-                agent.submit()
+                driver.get(login_page)
+                driver.find_element_by_name("userId").send_keys(login_id)
+                driver.find_element_by_name("userPass").send_keys(password)
+                driver.find_element_by_xpath("//form[@action='https://member.accesstrade.net/atv3/login.html']/input[@class='btn']").click()
 
-                html = agent.open(data_page)
+                time.sleep(3) # js読み込みが終わるまでのバッファ
+                html = driver.page_source.encode("utf-8")
                 soup = BeautifulSoup(html, "html.parser")
                 target = soup.select(".report tbody tr")
                 price = to_num_s(target[2].find_all("td")[0].text)
@@ -130,14 +129,15 @@ def search_asps():
 
         elif asp_name == "mosimo":
             try:
-                agent.open(login_page)
-                form_action = "https://af.moshimo.com/af/shop/login/execute"
-                agent.select_form(action=form_action)
-                agent["account"] = login_id
-                agent["password"] = password
-                agent.submit()
+                driver.get(login_page)
+                driver.find_element_by_name("account").send_keys(login_id)
+                driver.find_element_by_name("password").send_keys(password)
+                driver.find_element_by_name("login").click()
 
-                html = agent.open("%s/%s" % (data_page, "daily"))
+                driver.get(f"{data_page}/daily")
+                time.sleep(3) # js読み込みが終わるまでのバッファ
+
+                html = driver.page_source.encode("utf-8")
                 soup = BeautifulSoup(html, "html.parser")
                 target = soup.select(".payment-table tbody")[0].find_all("tr")[-1]
                 price = to_num_s(target.find_all("td")[3].find_all("p")[1].text)
@@ -147,14 +147,15 @@ def search_asps():
 
         elif asp_name == "rentracks":
             try:
-                agent.open(login_page)
-                form_action = "https://manage.rentracks.jp/manage/login/login_manage_validation"
-                agent.select_form(action=form_action)
-                agent["idMailaddress"] = login_id
-                agent["idLoginPassword"] = password
-                agent.submit()
+                driver.get(login_page)
+                driver.find_element_by_name("idMailaddress").send_keys(login_id)
+                driver.find_element_by_name("idLoginPassword").send_keys(password)
+                driver.find_element_by_name("idButton").click()
 
-                html = agent.open(data_page)
+                driver.get(data_page)
+                time.sleep(3) # js読み込みが終わるまでのバッファ
+
+                html = driver.page_source.encode("utf-8")
                 soup = BeautifulSoup(html, "html.parser")
                 target = soup.select(".datatable tr")
 
@@ -212,36 +213,34 @@ def search_asps():
         #     except:
         #         add_line_message(asp_name, "取得失敗")
 
-        elif asp_name == "presco":
-            try:
-                # Login
-                driver.get(login_page)
-                driver.find_element_by_name("loginId").send_keys(login_id)
-                driver.find_element_by_name("password").send_keys(password)
-                driver.find_element_by_id("button1").click()
-
-                now = datetime.datetime.now()
-                year = str(now.year)
-                month = str(now.month)
-                if (len(month) == 1):
-                    month = "0" + month
-                latest_data_page = ("%s/daily/yyyymm/%s-%s/" % (data_page, year, month))
-                driver.get(latest_data_page)
-
-                html = driver.page_source.encode("utf-8")
-                soup = BeautifulSoup(html, "html.parser")
-
-                target = soup.select("#mainContents tbody tr")[now.day + 1]
-                price = to_num_s(target.find_all("td")[-1].text)
-                add_line_message(asp_name, delimited(price))
-            except:
-                add_line_message(asp_name, "取得失敗")
+        # TODO: 売上がゼロのためhtml構造がわからず結果の出力ができない
+        # elif asp_name == "presco":
+        #     try:
+        #         # Login
+        #         driver.get(login_page)
+        #         driver.find_elements_by_xpath("//input[@name='username']")[1].send_keys(login_id)
+        #         driver.find_elements_by_xpath("//input[@name='password']")[1].send_keys(password)
+        #         driver.find_elements_by_xpath("//input[@type='submit']")[1].click()
+        #
+        #         driver.get(data_page)
+        #         html = driver.page_source.encode("utf-8")
+        #         soup = BeautifulSoup(html, "html.parser")
+        #
+        #         # target = soup.select("#mainContents tbody tr")[now.day + 1]
+        #         # price = to_num_s(target.find_all("td")[-1].text)
+        #         add_line_message(asp_name, delimited(price))
+        #     except:
+        #         add_line_message(asp_name, "取得失敗")
 
 def line_notify():
     # LINE Notify settings
-    with open("line_notify.yml", "r") as file:
-        line_pay = file.read()
-    LINE_TOKEN = yaml.safe_load(line_pay)["token"]
+
+    # for development
+    # with open("line_notify.yml", "r") as file:
+    #     line_notify = file.read()
+    # LINE_TOKEN = yaml.safe_load(line_notify)["token"]
+
+    LINE_TOKEN = os.environ["LINE_NOTIFY_TOKEN"]
     LINE_NOTIFY_URL = "https://notify-api.line.me/api/notify"
 
     # LINe Notify logic
