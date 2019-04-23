@@ -41,7 +41,6 @@ with open("security.yml", "r") as file:
     # TODO: refactoring code!
     # Select target asps
     _asp_names = security_info.keys()
-    _asp_names.sort()
     for asp_name in _asp_names:
         if security_info[asp_name]["id"]:
             asp_names.append(asp_name)
@@ -57,7 +56,7 @@ def initialize():
     c.line_notify_message = "本日の発生報酬"
 
 def to_num_s(str):
-    return re.sub(r"\D", "", str.strip().encode("utf-8"))
+    return re.sub(r"\D", "", str.strip())
 
 def delimited(str):
     return "¥{:,d}".format(int(str))
@@ -100,6 +99,7 @@ def search_asps():
                 driver.find_element_by_name("p_password").send_keys(password)
                 driver.find_element_by_name("partnerlogin").click()
 
+                driver.get(f"{data_page}/daily")
                 time.sleep(3) # js読み込みが終わるまでのバッファ
                 html = driver.page_source.encode("utf-8")
                 soup = BeautifulSoup(html, "html.parser")
