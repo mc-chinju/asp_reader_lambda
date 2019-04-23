@@ -95,13 +95,13 @@ def search_asps():
 
         elif asp_name == "felmat":
             try:
-                agent.open(login_page)
-                agent.select_form(name="loginForm")
-                agent["p_username"] = login_id
-                agent["p_password"] = password
-                agent.submit()
+                driver.get(login_page)
+                driver.find_element_by_name("p_username").send_keys(login_id)
+                driver.find_element_by_name("p_password").send_keys(password)
+                driver.find_element_by_name("partnerlogin").click()
 
-                html = agent.open("%s/%s" % (data_page, "daily"))
+                time.sleep(3) # js読み込みが終わるまでのバッファ
+                html = driver.page_source.encode("utf-8")
                 soup = BeautifulSoup(html, "html.parser")
 
                 today_number = datetime.date.today().day
@@ -113,14 +113,13 @@ def search_asps():
 
         elif asp_name == "access_trade":
             try:
-                agent.open(login_page)
-                form_action = "https://member.accesstrade.net/atv3/login.html"
-                agent.select_form(action=form_action)
-                agent["userId"] = login_id
-                agent["userPass"] = password
-                agent.submit()
+                driver.get(login_page)
+                driver.find_element_by_name("userId").send_keys(login_id)
+                driver.find_element_by_name("userPass").send_keys(password)
+                driver.find_element_by_xpath("//form[@action='https://member.accesstrade.net/atv3/login.html']/input[@class='btn']").click()
 
-                html = agent.open(data_page)
+                time.sleep(3) # js読み込みが終わるまでのバッファ
+                html = driver.page_source.encode("utf-8")
                 soup = BeautifulSoup(html, "html.parser")
                 target = soup.select(".report tbody tr")
                 price = to_num_s(target[2].find_all("td")[0].text)
