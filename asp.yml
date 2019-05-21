@@ -25,3 +25,6 @@ rentracks:
 value_commerce:
   login: https://aff.valuecommerce.ne.jp/?type=4
   data: https://aff.valuecommerce.ne.jp/report/stats
+link_a:
+  login: https://partner.link-a.net/login.php
+  data: https://partner.link-a.net/linkapages/top.php
