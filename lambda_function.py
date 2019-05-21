@@ -182,6 +182,28 @@ def search_asps():
             except:
                 add_line_message(asp_name, "取得失敗")
 
+        elif asp_name == "afb":
+            try:
+                # Login
+                driver.get(login_page)
+                driver.find_element_by_name("login_name").send_keys(login_id)
+                driver.find_element_by_name("password").send_keys(password)
+                driver.find_element_by_class_name("m-btn__submit").click()
+
+                # Get data
+                driver.get(data_page)
+                time.sleep(3) # js読み込みが終わるまでのバッファ
+
+                html = driver.page_source.encode("utf-8")
+                soup = BeautifulSoup(html, "html.parser")
+
+                target = soup.select("#RealTimeReport table tr")[3]
+                price = to_num_s(target.find_all("td")[0].text)
+                add_line_message(asp_name, delimited(price))
+            except:
+                add_line_message(asp_name, "取得失敗")
+
+
         # TODO: headless mode で動かしたときに、ログイン時にランダム文字列入力を求められるため断念
         # elif asp_name == "amazon_associate":
         #     try:

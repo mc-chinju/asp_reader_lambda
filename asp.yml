@@ -1,6 +1,9 @@
 a8:
   login: https://www.a8.net
   data: https://pub.a8.net/a8v2/asResultReportAction.do
+afb:
+  login: https://www.afi-b.com
+  data: https://www.afi-b.com/pa/main
 access_trade:
   login: https://www.accesstrade.ne.jp
   data: https://member.accesstrade.net/atv3/home.html
